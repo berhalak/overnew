@@ -2,7 +2,7 @@
 	"name": "@berhalak/overnew",
 	"private": false,
 	"version": "0.0.1",
-	"description": "Typescript template",
+	"description": "Dependency injection by overriding new operator",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"scripts": {
@@ -15,7 +15,14 @@
 		"type": "git",
 		"url": "git+https://github.com/berhalak/overnew.git"
 	},
-	"author": "",
+	"keywords": [
+		"di",
+		"dependency injection",
+		"override",
+		"new operator",
+		"typescript"
+	],
+	"author": "berhalak",
 	"license": "MIT",
 	"bugs": {
 		"url": "https://github.com/berhalak/overnew/issues"
