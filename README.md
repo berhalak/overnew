@@ -1,2 +1,4 @@
-# ts-template
-Typescript package template
+# overnew
+npm install overnew
+
+Override new operator
