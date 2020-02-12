@@ -1,5 +1,5 @@
 {
-	"name": "@berhalak/overnew",
+	"name": "overnew",
 	"private": false,
 	"version": "0.0.1",
 	"description": "Dependency injection by overriding new operator",
