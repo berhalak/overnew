@@ -1,5 +1,5 @@
 {
-	"name": "@berhalak/ts-template",
+	"name": "@berhalak/overnew",
 	"private": false,
 	"version": "0.0.1",
 	"description": "Typescript template",
@@ -13,19 +13,19 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/berhalak/ts-template.git"
+		"url": "git+https://github.com/berhalak/overnew.git"
 	},
 	"author": "",
 	"license": "MIT",
 	"bugs": {
-		"url": "https://github.com/berhalak/ts-template/issues"
+		"url": "https://github.com/berhalak/overnew/issues"
 	},
-	"homepage": "https://github.com/berhalak/ts-template#readme",
+	"homepage": "https://github.com/berhalak/overnew#readme",
 	"devDependencies": {
-		"@types/jest": "^25.1.0",
-		"@types/node": "^13.5.0",
+		"@types/jest": "^25.1.2",
+		"@types/node": "^13.7.1",
 		"jest": "^25.1.0",
-		"ts-jest": "^25.0.0",
+		"ts-jest": "^25.2.0",
 		"ts-node": "^8.6.2",
 		"typescript": "^3.7.5"
 	}
