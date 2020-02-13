@@ -1,6 +1,8 @@
 
-
-export function override<T>(type: VType<T>) {
+/**
+ * Overrides base class constructor with derived class constructor
+ */
+export function override(type: any) {
     return function (target: any) {
         Class.for(type).use(target);
     }
