@@ -1,6 +1,6 @@
 import { override, virtual, Class, singleton } from './index';
 test('with decorators', () => {
-	Class.clear();
+	Class.reset();
 
 	@virtual
 	class BaseClass {
@@ -16,12 +16,14 @@ test('with decorators', () => {
 		}
 	}
 
+	
+
 	expect(new BaseClass().hello()).toBe("derive");
 })
 
 test('with explicit call', () => {
 
-	Class.clear();
+	Class.reset();
 
 	@virtual
 	class Default {
@@ -43,7 +45,7 @@ test('with explicit call', () => {
 
 test('unwrapping', () => {
 
-	Class.clear();
+	Class.reset();
 
 	@virtual
 	class Default {
@@ -69,7 +71,7 @@ test('unwrapping', () => {
 
 test('singleton', () => {
 
-	Class.clear();
+	Class.reset();
 
 	@virtual
 	class Default {
@@ -100,7 +102,7 @@ test('singleton', () => {
 
 test('singleton using decorator', () => {
 
-	Class.clear();
+	Class.reset();
 
 	@singleton
 	class Default {

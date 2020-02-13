@@ -58,19 +58,27 @@ function create<T>(this: any, virtualType: Type<T>, args: any[], context: Contex
     }
 }
 
+/**
+ * Allows class to be overridden using override attribute
+ * and declares this class as singleton.
+ */
 export function singleton(baseType: any) {
     mappingsSingletons.add(baseType);
     return virtual(baseType);
 }
 
+/**
+ * Allows class to be overridden using override attribute
+ * or using verbose call to Class.for(Base).use(Derive)
+ */
 export function virtual(baseType: any): any {
     const constructorProxy: VType<any> = function (this: any, ...args: any[]) {
-        return create(baseType, args, this);
+        return create(baseType as any, args, this);
     } as any;
     constructorProxy.prototype = baseType.prototype;
     // for packer - as can't set name for now
     (constructorProxy as any).$type = baseType.name;
-    // store orginal type in static field
+    // store original type in static field
     constructorProxy._proper = baseType;
     return constructorProxy;
 }
@@ -78,18 +86,30 @@ export function virtual(baseType: any): any {
 type Type<T = any> = new (...args: any[]) => T;
 type VType<T> = Type<T> & { _proper?: Type<T>, name?: string }
 
+/**
+ * Container and an api for manipulating overrides
+ */
 export class Class {
 
-    static clear() {
+    /**
+     * Reset all settings and removes singletons, no previous declarations will work
+     */
+    static reset() {
         mapping.clear();
         singletons.clear();
         mappingsSingletons.clear();
     }
 
-    static stop() {
-
+    /**
+    * Removes all singletons
+    */
+    static clear() {
+        singletons.clear();
     }
 
+    /**
+    * Manual register an override for a base class
+    */
     static for<B>(virtualType: Type<B>) {
         const baseType = Class.unwrap(virtualType);
         return {
@@ -105,6 +125,9 @@ export class Class {
         }
     }
 
+    /**
+     * Returns an base class (virtual one) from virtual declaration
+     */
     static unwrap<T>(virtualType: Type<T>): Type<T> {
         return (virtualType as any)._proper ?? virtualType;
     }

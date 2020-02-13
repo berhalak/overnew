@@ -1,6 +1,6 @@
 import { Class, virtual, override } from ".";
 
-Class.clear();
+Class.reset();
 
 @virtual
 class Default {
@@ -17,7 +17,7 @@ class Default {
     }
 }
 
-//@override(Default)
+@override(Default)
 class Extern extends Default {
     surname = "Extern";
 
