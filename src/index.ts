@@ -6,43 +6,73 @@ export function override<T>(type: VType<T>) {
     }
 }
 
-const map = new Map<Type, Type>();
-const singletons = new Set<Type>();
-const instances = new Map<Type, any>();
+const mapping = new Map<Type, Type>();
+const mappingsSingletons = new Set<Type>();
+const singletons = new Map<Type, any>();
 
-function create<T>(this: any, virtual: Type<T>, args: any[], context: any) {
-    const deriv = map.get(virtual);
-    if (deriv && deriv != context.constructor) {
-        if (singletons.has(virtual)) {
-            if (instances.has(virtual)) {
-                return instances.get(virtual);
+function mapToOverride<T>(virtual: Type<T>): Type<T> {
+    return mapping.get(virtual);
+}
+
+function isSingleton(virtual: Type) {
+    return mappingsSingletons.has(virtual);
+}
+
+function singletonExists(virtual: Type) {
+    return singletons.has(virtual);
+}
+
+type Context<T> = T & { constructor: Type<T> }
+
+function create<T>(this: any, virtualType: Type<T>, args: any[], context: Context<T>) {
+    // get override type
+    const overrideType = mapToOverride(virtualType);
+
+    // test if create was called as part of override instance creation
+    // so when code is executed as new (class Extend extends Base {})() 
+    // we can be in a moment when base class is being created, but this points to Extend
+    // we don't wont to create a base class as this will result in infinite loop
+    const isOverrideInstance = overrideType == context.constructor;
+
+    if (overrideType && !isOverrideInstance) {
+        if (isSingleton(virtualType)) {
+            if (singletonExists(virtualType)) {
+                return singletons.get(virtualType);
             }
         }
-        const inst = new deriv(...args);
-        if (singletons.has(virtual)) {
-            return instances.set(virtual, inst);
+
+        // create override instanse
+        // this in turn call eventually this function
+        // but we tested if this is overrideInstance
+        const instance = new overrideType(...args);
+        if (isSingleton(virtualType)) {
+            return singletons.set(virtualType, instance);
         }
-        return inst;
+        return instance;
+    } else {
+        // create a original virtual type
+        // as there is not mapping, or we need to provide ducktypeing extends
+        const baseInstance = new virtualType(...args);
+        // return plain object, as prototype and constructor will be set by engine
+        return Object.assign(context, baseInstance);
     }
-    const baseInstance = new virtual(...args);
-    Object.assign(context, baseInstance);
-    return null;
 }
 
 export function singleton(baseType: any) {
-    singletons.add(baseType);
+    mappingsSingletons.add(baseType);
     return virtual(baseType);
 }
 
-export function virtual(baseType: any) {
-    const f: VType<any> = function (this: any, ...args: any[]) {
+export function virtual(baseType: any): any {
+    const constructorProxy: VType<any> = function (this: any, ...args: any[]) {
         return create(baseType, args, this);
     } as any;
-    f.prototype = baseType.prototype;
+    constructorProxy.prototype = baseType.prototype;
     // for packer - as can't set name for now
-    (f as any).$type = baseType.name;
-    f._proper = baseType;
-    return f;
+    (constructorProxy as any).$type = baseType.name;
+    // store orginal type in static field
+    constructorProxy._proper = baseType;
+    return constructorProxy;
 }
 
 type Type<T = any> = new (...args: any[]) => T;
@@ -51,19 +81,23 @@ type VType<T> = Type<T> & { _proper?: Type<T>, name?: string }
 export class Class {
 
     static clear() {
-        map.clear();
-        instances.clear();
+        mapping.clear();
         singletons.clear();
+        mappingsSingletons.clear();
+    }
+
+    static stop() {
+
     }
 
     static for<B>(virtualType: Type<B>) {
         const baseType = Class.unwrap(virtualType);
         return {
             use<D>(derivedType: Type<D>) {
-                map.set(baseType, derivedType);
+                mapping.set(baseType, derivedType);
                 return {
                     singleton() {
-                        singletons.add(baseType);
+                        mappingsSingletons.add(baseType);
                         return Class;
                     }
                 }

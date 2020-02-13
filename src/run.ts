@@ -4,16 +4,31 @@ Class.clear();
 
 @virtual
 class Default {
+    name = "Default";
+
+    static className = "Default";
+
+    id() {
+        return this.name;
+    }
+
     hello() {
-        return "default";
+        return "Default name is " + this.id();
     }
 }
 
-@override(Default)
-class Extern implements Default {
+//@override(Default)
+class Extern extends Default {
+    surname = "Extern";
+
+    static className = "Extern";
+
     hello() {
-        return "extern";
+        return "Extern name is " + this.id() + " surname " + this.surname;
     }
 }
 
-console.log(new Default().hello());
+const obj = new Default();
+
+console.log(obj.name);
+console.log(obj.hello());

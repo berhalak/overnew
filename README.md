@@ -16,8 +16,18 @@ class BaseClass {
     }
 }
 
+// implement base class
 @override(BaseClass)
 class DeriveClass implements BaseClass {
+    hello() {
+        return "derive";
+    }
+}
+
+// or even extend 
+
+@override(BaseClass)
+class DeriveClass extends BaseClass {
     hello() {
         return "derive";
     }
