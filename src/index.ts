@@ -48,7 +48,7 @@ function create<T>(this: any, virtualType: Type<T>, args: any[], context: Contex
 		// but we tested if this is overrideInstance
 		const instance = new overrideType(...args);
 		if (isSingleton(virtualType)) {
-			return singletons.set(virtualType, instance);
+			singletons.set(virtualType, instance);
 		}
 		return instance;
 	} else {
@@ -62,11 +62,10 @@ function create<T>(this: any, virtualType: Type<T>, args: any[], context: Contex
 
 		// create a original virtual type
 		// as there is not mapping, or we need to provide ducktypeing extends
-		const baseInstance = new virtualType(...args);
+		const instance = new virtualType(...args);
 		// return plain object, as prototype and constructor will be set by engine
-		const instance = Object.assign(context, baseInstance);
 		if (isSingleton(virtualType)) {
-			return singletons.set(virtualType, instance);
+			singletons.set(virtualType, instance);
 		}
 		return instance;
 	}
@@ -87,7 +86,8 @@ export function singleton(baseType: any) {
  */
 export function virtual(baseType: any): any {
 	const constructorProxy: VType<any> = function (this: any, ...args: any[]) {
-		return create(baseType as any, args, this);
+		const instance = create(baseType as any, args, this);
+		return instance;
 	} as any;
 	constructorProxy.prototype = baseType.prototype;
 	// for packer - as can't set name for now

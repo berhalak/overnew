@@ -8,6 +8,7 @@
 	"scripts": {
 		"test": "jest",
 		"build": "tsc",
+		"main": "ts-node ./src/main.ts",
 		"compile": "tsc --noEmit",
 		"watch": "jest --watch"
 	},
