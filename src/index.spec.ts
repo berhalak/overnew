@@ -178,26 +178,75 @@ test('singleton as default parameter', () => {
 
 	Class.reset();
 
-    @singleton
-    class Repo {
-        list : Model[] = [];
-        add(m : Model){
-            this.list.push(m);
-        }
-    }
+	@singleton
+	class Repo {
+		list: Model[] = [];
+		add(m: Model) {
+			this.list.push(m);
+		}
+	}
 
-    class Model {
-        constructor(private db = new Repo()){
+	class Model {
+		constructor(private db = new Repo()) {
 
-        }
+		}
 
-        save(){
-            this.db.add(this);
-        }
-    }
+		save() {
+			this.db.add(this);
+		}
+	}
 
-    let m = [new Model(), new Model()];
+	let m = [new Model(), new Model()];
 
-    m.forEach(x=> x.save());
-    expect(new Repo().list.length).toBe(2);
+	m.forEach(x => x.save());
+	expect(new Repo().list.length).toBe(2);
+})
+
+test("Complex override", () => {
+	Class.reset();
+
+	@virtual
+	class Default {
+		notOverrideProp = "Default";
+
+		static className = "Default";
+
+		notOverrideFun() {
+			return this.notOverrideProp;
+		}
+
+		override() {
+			return 1;
+		}
+
+		test() {
+			return "Default-" + this.notOverrideFun();
+		}
+	}
+
+	@override(Default)
+	class Extern extends Default {
+		newProp = "Extern";
+
+		static className = "Extern";
+
+		override() {
+			return 2;
+		}
+
+		test() {
+			expect(this.notOverrideProp).toBe("Default");
+			expect(Extern.className).toBe("Extern");
+			expect(Default.className).toBe("Default");
+			expect(this.notOverrideFun()).toBe("Default");
+			expect(super.test()).toBe("Default-Default");
+			expect(this.override()).toBe(2);
+
+			return "";
+		}
+	}
+
+	const obj = new Default();
+
+	obj.test();
 })
