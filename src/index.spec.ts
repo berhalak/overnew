@@ -147,5 +147,29 @@ test('singleton using instance', () => {
 	const t = new Default();
 
 	expect(t.hello()).toBe(5);
+})
 
+test('singleton without override', () => {
+
+	Class.reset();
+
+	let count = 0;
+	@singleton
+	class Default {
+		constructor() {
+			count++;
+		}
+		hello() {
+			return "default";
+		}
+	}
+
+	for (let i = 0; i < 10; i++) {
+		new Default();
+	}
+
+	expect(count).toBe(1);
+
+	const t = new Default();
+	t.hello();
 })
