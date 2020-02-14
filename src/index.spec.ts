@@ -16,7 +16,7 @@ test('with decorators', () => {
 		}
 	}
 
-	
+
 
 	expect(new BaseClass().hello()).toBe("derive");
 })
@@ -129,4 +129,23 @@ test('singleton using decorator', () => {
 	}
 
 	expect(counter).toBe(1);
+})
+
+test('singleton using instance', () => {
+
+	Class.reset();
+
+	@virtual
+	class Default {
+		hello() {
+			return "default";
+		}
+	}
+
+	Class.for(Default).return({ hello() { return 5 } });
+
+	const t = new Default();
+
+	expect(t.hello()).toBe(5);
+
 })

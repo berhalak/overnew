@@ -52,6 +52,14 @@ function create<T>(this: any, virtualType: Type<T>, args: any[], context: Contex
         }
         return instance;
     } else {
+
+        if (isSingleton(virtualType)) {
+            if (singletonExists(virtualType)) {
+                const value = singletons.get(virtualType);
+                return value;
+            }
+        }
+
         // create a original virtual type
         // as there is not mapping, or we need to provide ducktypeing extends
         const baseInstance = new virtualType(...args);
@@ -88,6 +96,29 @@ export function virtual(baseType: any): any {
 type Type<T = any> = new (...args: any[]) => T;
 type VType<T> = Type<T> & { _proper?: Type<T>, name?: string }
 
+class Settings<V, D> {
+    constructor(private baseType: Type<V>, private virtualType: Type<D>) {
+
+    }
+
+    use<D>(derivedType: Type<D>) {
+        mapping.set(this.baseType, derivedType);
+        return this;
+    }
+
+
+    singleton() {
+        mappingsSingletons.add(this.baseType);
+        return Class;
+    }
+
+    return<D>(instance: D) {
+        mappingsSingletons.add(this.baseType);
+        singletons.set(this.baseType, instance);
+        return Class;
+    }
+}
+
 /**
  * Container and an api for manipulating overrides
  */
@@ -114,17 +145,7 @@ export class Class {
     */
     static for<B>(virtualType: Type<B>) {
         const baseType = Class.unwrap(virtualType);
-        return {
-            use<D>(derivedType: Type<D>) {
-                mapping.set(baseType, derivedType);
-                return {
-                    singleton() {
-                        mappingsSingletons.add(baseType);
-                        return Class;
-                    }
-                }
-            }
-        }
+        return new Settings(baseType, virtualType);
     }
 
     /**
