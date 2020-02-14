@@ -3,6 +3,6 @@ tsconfig.json
 *.spec*
 jest.config.js
 .vscode
-**/run*ts
-dist/run.*
+**/main*ts
+dist/main.*
 *.tgz
