@@ -173,3 +173,31 @@ test('singleton without override', () => {
 	const t = new Default();
 	t.hello();
 })
+
+test('singleton as default parameter', () => {
+
+	Class.reset();
+
+    @singleton
+    class Repo {
+        list : Model[] = [];
+        add(m : Model){
+            this.list.push(m);
+        }
+    }
+
+    class Model {
+        constructor(private db = new Repo()){
+
+        }
+
+        save(){
+            this.db.add(this);
+        }
+    }
+
+    let m = [new Model(), new Model()];
+
+    m.forEach(x=> x.save());
+    expect(new Repo().list.length).toBe(2);
+})
