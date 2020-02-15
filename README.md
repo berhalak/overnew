@@ -1,6 +1,7 @@
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/berhalak/overnew) 
 
 # overnew
+
 npm install overnew
 
 Simple dependency injection library based on overriding new operator.
@@ -55,7 +56,34 @@ class ProperImplementation implements DefaultSingleton {}
 Class.for(DefaultSingleton).use(ProperImplementation);
 
 // or if virtual attribute was used, but we want to override with a singleton instance
-Class.for(DefaultSingleton).use(ProperImplementation).singleton()
+Class.for(DefaultSingleton).use(ProperImplementation).singleton();
+
+// don't want to use attributes ? use Class as a static container
+
+// you need to define interfaces as classes
+class MyInterface {
+    hello() {...}
+}
+
+class MyPlugin implements /* extends */ MyInteface {
+    hello() {...}
+}
+
+Class.for(MyInterface).use(MyPlugin)
+Class.for(MyInterface).use(() => new MyPlugin()));
+Class.for(MyInterface).use(new MyPlugin()) // singleton
+
+// anywhere in your code
+Class.resolve(MyInterface);
+
+// need to change registration - completely reset container
+Class.reset();
+
+// or only for single type
+Class.for(MyInterface).clear();
+
+// or just remove all singletons
+Class.delete();
 
 ```
 

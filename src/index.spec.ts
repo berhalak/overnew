@@ -250,3 +250,65 @@ test("Complex override", () => {
 
 	obj.test();
 })
+
+test("No attributes", () => {
+	Class.reset();
+
+	class MyInterface {
+		hello(): string {
+			throw new Error("Not implemented")
+		}
+	}
+
+	let count = 0;
+	class MyPlugin extends MyInterface {
+		constructor() {
+			super();
+			count++;
+		}
+		hello() { return "hi" };
+	}
+
+	Class.for(MyInterface).use(MyPlugin);
+
+	expect(Class.resolve(MyInterface).hello()).toBe("hi");
+
+	Class.for(MyInterface).use(MyPlugin).singleton();
+
+	Class.resolve(MyInterface);
+	Class.resolve(MyInterface);
+	Class.resolve(MyInterface);
+	Class.resolve(MyInterface);
+	Class.resolve(MyInterface);
+
+	expect(count).toBe(2); // as first was on the first test
+
+	const instance = new MyPlugin();
+	Class.for(MyInterface).return(instance);
+
+	Class.resolve(MyInterface);
+	Class.resolve(MyInterface);
+	Class.resolve(MyInterface);
+	Class.resolve(MyInterface);
+	Class.resolve(MyInterface);
+	expect(count).toBe(3); // as first was on the first test
+
+	expect(Class.resolve(MyInterface)).toBe(instance);
+
+	// test extreme
+	Class.for(MyInterface).clear().return(5);
+	expect(Class.resolve(MyInterface)).toBe(5);
+
+	count = 0;
+	Class.for(MyInterface).clear().return(() => ++count);
+
+	Class.resolve(MyInterface);
+	Class.resolve(MyInterface);
+	Class.resolve(MyInterface);
+	Class.resolve(MyInterface);
+	Class.resolve(MyInterface);
+
+	expect(Class.resolve(MyInterface)).toBe(6);
+
+
+})

@@ -11,6 +11,7 @@ export function override(type: any) {
 const mapping = new Map<Type, Type>();
 const mappingsSingletons = new Set<Type>();
 const singletons = new Map<Type, any>();
+const resolvers = new Map<Type, any>();
 
 function mapToOverride<T>(virtual: Type<T>): Type<T> {
 	return mapping.get(virtual);
@@ -37,37 +38,20 @@ function create<T>(this: any, virtualType: Type<T>, args: any[], context: Contex
 	const isOverrideInstance = overrideType == context.constructor;
 
 	if (overrideType && !isOverrideInstance) {
-		if (isSingleton(virtualType)) {
-			if (singletonExists(virtualType)) {
-				return singletons.get(virtualType);
-			}
-		}
-
-		// create override instanse
+		// create override instance
 		// this in turn call eventually this function
 		// but we tested if this is overrideInstance
-		const instance = new overrideType(...args);
-		if (isSingleton(virtualType)) {
-			singletons.set(virtualType, instance);
-		}
-		return instance;
+		return ensureSingleton(virtualType, () => {
+			const instance = new overrideType(...args);
+			return instance;
+		});
 	} else {
-
-		if (isSingleton(virtualType)) {
-			if (singletonExists(virtualType)) {
-				const value = singletons.get(virtualType);
-				return value;
-			}
-		}
-
-		// create a original virtual type
-		// as there is not mapping, or we need to provide ducktypeing extends
-		const instance = new virtualType(...args);
-		// return plain object, as prototype and constructor will be set by engine
-		if (isSingleton(virtualType)) {
-			singletons.set(virtualType, instance);
-		}
-		return instance;
+		return ensureSingleton(virtualType, () => {
+			// create a original virtual type
+			// as there is not mapping, or we need to provide ducktypeing extends
+			const instance = new virtualType(...args);
+			return instance;
+		});
 	}
 }
 
@@ -116,17 +100,68 @@ class Settings<V, D> {
 		return Class;
 	}
 
-	return<D>(instance: D) {
-		mappingsSingletons.add(this.baseType);
-		singletons.set(this.baseType, instance);
-		return Class;
+	clear() {
+		mappingsSingletons.delete(this.baseType);
+		resolvers.delete(this.baseType);
+		singletons.delete(this.baseType);
+		mapping.delete(this.baseType);
+		return this;
 	}
+
+	return<D>(instance: () => D): this
+	return<D>(instance: D): this
+	return(instance: any) {
+		if (typeof instance != 'function') {
+			mappingsSingletons.add(this.baseType);
+			singletons.set(this.baseType, instance);
+			resolvers.delete(this.baseType);
+		} else {
+			resolvers.set(this.baseType, instance);
+		}
+		return this;
+	}
+}
+
+function ensureSingleton<T>(type: Type<T>, resolve: () => T): T {
+	if (isSingleton(type)) {
+		if (singletonExists(type)) {
+			return singletons.get(type);
+		}
+	}
+
+	const instance = resolve();
+
+	if (isSingleton(type)) {
+		singletons.set(type, instance);
+	}
+
+	return instance;
 }
 
 /**
  * Container and an api for manipulating overrides
  */
 export class Class {
+	static resolve<T>(type: Type<T>, ...args: ConstructorParameters<Type<T>>): T {
+
+		// first unwrap
+		type = Class.unwrap(type);
+
+		return ensureSingleton(type, () => {
+			const concrete = mapToOverride(type);
+			let instance: T = null;
+			if (concrete) {
+				instance = new concrete(...args);
+			} else {
+				if (resolvers.has(type)) {
+					instance = resolvers.get(type)(...args);
+				} else {
+					instance = new type(...args);
+				}
+			}
+			return instance;
+		})
+	}
 
     /**
      * Reset all settings and removes singletons, no previous declarations will work
@@ -135,12 +170,13 @@ export class Class {
 		mapping.clear();
 		singletons.clear();
 		mappingsSingletons.clear();
+		resolvers.clear();
 	}
 
     /**
     * Removes all singletons
     */
-	static clear() {
+	static delete() {
 		singletons.clear();
 	}
 
