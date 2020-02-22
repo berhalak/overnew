@@ -220,7 +220,7 @@ test("Complex override", () => {
 		}
 
 		test() {
-			return "Default-" + this.notOverrideFun();
+			throw "Should be overridden";
 		}
 	}
 
