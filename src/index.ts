@@ -50,6 +50,9 @@ function create<T>(this: any, virtualType: Type<T>, args: any[], context: Contex
 			// create a original virtual type
 			// as there is not mapping, or we need to provide ducktypeing extends
 			const instance = new virtualType(...args);
+			// set proper prototype
+			if (overrideType)
+				Object.setPrototypeOf(instance, overrideType.prototype);
 			return instance;
 		});
 	}
@@ -78,6 +81,10 @@ export function virtual(baseType: any): any {
 	(constructorProxy as any).$type = baseType.name;
 	// store original type in static field
 	constructorProxy._proper = baseType;
+
+	// copy all the static props
+	Object.assign(constructorProxy, Object.assign({}, baseType));
+
 	return constructorProxy;
 }
 
@@ -142,10 +149,11 @@ function ensureSingleton<T>(type: Type<T>, resolve: () => T): T {
  * Container and an api for manipulating overrides
  */
 export class Class {
-	static resolve<T>(type: Type<T>, ...args: ConstructorParameters<Type<T>>): T {
+	static resolve<T extends new (...args: any[]) => any>(type: T, ...args: ConstructorParameters<T>):
+		T extends new (...args: any[]) => infer R ? R : never {
 
 		// first unwrap
-		type = Class.unwrap(type);
+		type = Class.unwrap(type) as any;
 
 		return ensureSingleton(type, () => {
 			const concrete = mapToOverride(type);

@@ -222,6 +222,18 @@ test("Complex override", () => {
 		test() {
 			throw "Should be overridden";
 		}
+
+		callTest() {
+			return this.test();
+		}
+
+		private baseMethod() {
+			return "base";
+		}
+
+		callBase() {
+			return this.baseMethod();
+		}
 	}
 
 	@override(Default)
@@ -235,20 +247,24 @@ test("Complex override", () => {
 		}
 
 		test() {
-			expect(this.notOverrideProp).toBe("Default");
-			expect(Extern.className).toBe("Extern");
-			expect(Default.className).toBe("Default");
-			expect(this.notOverrideFun()).toBe("Default");
-			expect(super.test()).toBe("Default-Default");
-			expect(this.override()).toBe(2);
+			return this.newMethod();
+		}
 
-			return "";
+		newMethod() {
+			return "new";
 		}
 	}
 
 	const obj = new Default();
 
-	obj.test();
+	expect(obj.notOverrideProp).toBe("Default");
+	expect(Extern.className).toBe("Extern");
+	expect(Default.className).toBe("Default");
+	expect(obj.notOverrideFun()).toBe("Default");
+	expect(obj.override()).toBe(2);
+	expect(obj.test()).toBe("new");
+	expect(obj.callTest()).toBe("new");
+	expect(obj.callBase()).toBe("base");
 })
 
 test("No attributes", () => {
@@ -302,6 +318,7 @@ test("No attributes", () => {
 	count = 0;
 	Class.for(MyInterface).clear().return(() => ++count);
 
+
 	Class.resolve(MyInterface);
 	Class.resolve(MyInterface);
 	Class.resolve(MyInterface);
@@ -312,3 +329,69 @@ test("No attributes", () => {
 
 
 })
+
+
+test("Clears singleton", () => {
+
+	let count = 0;
+	@singleton
+	class Single {
+		constructor() {
+			count++;
+		}
+	}
+
+	for (let i = 0; i < 10; i++) {
+		new Single();
+	}
+
+	expect(count).toBe(1);
+
+	Class.delete();
+
+	for (let i = 0; i < 10; i++) {
+		new Single();
+	}
+
+	expect(count).toBe(2);
+
+});
+
+test("Not registered resolve", () => {
+	Class.reset();
+	let count = 0;
+
+	class First {
+		constructor(private msg: string) {
+			count++;
+
+		}
+		test() {
+			return this.msg;
+		}
+	}
+	const first = Class.resolve(First, "a");
+	expect(first.test()).toBe('a');
+	expect(count).toBe(1);
+	Class.resolve(First, "a")
+	expect(count).toBe(2);
+});
+
+test("Not registered as singleton", () => {
+	Class.reset();
+	let count = 0;
+	@singleton
+	class First {
+		constructor(private msg: string) {
+			count++;
+		}
+		test() {
+			return this.msg;
+		}
+	}
+	const first = Class.resolve(First, "a");
+	expect(first.test()).toBe('a');
+	expect(count).toBe(1);
+	Class.resolve(First, "a")
+	expect(count).toBe(1);
+});

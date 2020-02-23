@@ -1,22 +1,30 @@
 import { virtual, Class, singleton } from ".";
+import { override } from './index';
 
-@singleton
-class Repo {
-	list: Model[] = [];
-	add(m: Model) {
-		this.list.push(m);
+Class.reset();
+
+@virtual
+class Default {
+
+
+	test() {
+		return "failed"
 	}
 }
 
-class Model {
-	constructor(private db = new Repo()) {
+@override(Default)
+class Extern extends Default {
+	newProp = "Extern";
 
+	static className = "Extern";
+
+	override() {
+		return 2;
 	}
 
-	save() {
-		this.db.add(this);
+	test() {
+		return "works";
 	}
 }
 
-let m = new Model();
-m.save();
+
