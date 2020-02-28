@@ -149,7 +149,30 @@ function ensureSingleton<T>(type: Type<T>, resolve: () => T): T {
  * Container and an api for manipulating overrides
  */
 export class Class {
-	static resolve<T extends new (...args: any[]) => any>(type: T, ...args: ConstructorParameters<T>):
+	static resolve<T extends new (...args: any[]) => any>(type: T):
+		T extends new (...args: any[]) => infer R ? R : never {
+
+		// first unwrap
+		type = Class.unwrap(type) as any;
+
+		return ensureSingleton(type, () => {
+			// if has resolver - use this resolver
+			if (resolvers.has(type)) {
+				const instance = resolvers.get(type)();
+				return instance;
+			}
+
+			// if was registered, use override
+			const concrete = mapToOverride(type);
+			if (concrete) {
+				// this may fail, as not parameters where defined
+				return new concrete();
+			}
+			throw new Error("Instance wasn't created")
+		})
+	}
+
+	static create<T extends new (...args: any[]) => any>(type: T, ...args: ConstructorParameters<T>):
 		T extends new (...args: any[]) => infer R ? R : never {
 
 		// first unwrap

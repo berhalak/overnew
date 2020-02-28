@@ -287,15 +287,15 @@ test("No attributes", () => {
 
 	Class.for(MyInterface).use(MyPlugin);
 
-	expect(Class.resolve(MyInterface).hello()).toBe("hi");
+	expect(Class.create(MyInterface).hello()).toBe("hi");
 
 	Class.for(MyInterface).use(MyPlugin).singleton();
 
-	Class.resolve(MyInterface);
-	Class.resolve(MyInterface);
-	Class.resolve(MyInterface);
-	Class.resolve(MyInterface);
-	Class.resolve(MyInterface);
+	Class.create(MyInterface);
+	Class.create(MyInterface);
+	Class.create(MyInterface);
+	Class.create(MyInterface);
+	Class.create(MyInterface);
 
 	expect(count).toBe(2); // as first was on the first test
 
@@ -303,29 +303,30 @@ test("No attributes", () => {
 	Class.for(MyInterface).return(instance);
 
 	Class.resolve(MyInterface);
+	Class.create(MyInterface);
+	Class.create(MyInterface);
 	Class.resolve(MyInterface);
-	Class.resolve(MyInterface);
-	Class.resolve(MyInterface);
-	Class.resolve(MyInterface);
+	Class.create(MyInterface);
+	Class.create(MyInterface);
 	expect(count).toBe(3); // as first was on the first test
 
-	expect(Class.resolve(MyInterface)).toBe(instance);
+	expect(Class.create(MyInterface)).toBe(instance);
 
 	// test extreme
 	Class.for(MyInterface).clear().return(5);
-	expect(Class.resolve(MyInterface)).toBe(5);
+	expect(Class.create(MyInterface)).toBe(5);
 
 	count = 0;
 	Class.for(MyInterface).clear().return(() => ++count);
 
 
-	Class.resolve(MyInterface);
-	Class.resolve(MyInterface);
-	Class.resolve(MyInterface);
-	Class.resolve(MyInterface);
-	Class.resolve(MyInterface);
+	Class.create(MyInterface);
+	Class.create(MyInterface);
+	Class.create(MyInterface);
+	Class.create(MyInterface);
+	Class.create(MyInterface);
 
-	expect(Class.resolve(MyInterface)).toBe(6);
+	expect(Class.create(MyInterface)).toBe(6);
 
 
 })
@@ -370,10 +371,10 @@ test("Not registered resolve", () => {
 			return this.msg;
 		}
 	}
-	const first = Class.resolve(First, "a");
+	const first = Class.create(First, "a");
 	expect(first.test()).toBe('a');
 	expect(count).toBe(1);
-	Class.resolve(First, "a")
+	Class.create(First, "a")
 	expect(count).toBe(2);
 });
 
@@ -389,9 +390,109 @@ test("Not registered as singleton", () => {
 			return this.msg;
 		}
 	}
-	const first = Class.resolve(First, "a");
+	const first = Class.create(First, "a");
 	expect(first.test()).toBe('a');
 	expect(count).toBe(1);
-	Class.resolve(First, "a")
+	Class.create(First, "a")
 	expect(count).toBe(1);
+});
+
+test("Resolving singleton", () => {
+	Class.reset();
+	class Inter {
+
+	}
+
+	try {
+		const f = Class.resolve(Inter);
+	} catch { }
+
+
+	Class.for(Inter).return(new Inter());
+
+	const t = Class.resolve(Inter);
+
+	expect(t.constructor).toBe(Inter);
+});
+
+test("Resolving factory", () => {
+	Class.reset();
+	class Inter {
+
+	}
+
+	try {
+		const f = Class.resolve(Inter);
+	} catch { }
+
+
+	Class.for(Inter).return(() => new Inter());
+
+	const t = Class.resolve(Inter);
+
+	expect(t.constructor).toBe(Inter);
+});
+
+test("Resolving singleton through default constructor", () => {
+	Class.reset();
+
+	let counter = 0;
+
+	@singleton
+	class Inter {
+		constructor() {
+			counter++;
+		}
+		hello() { return "a" }
+	}
+
+	try {
+		const f = Class.resolve(Inter);
+	} catch { }
+
+
+	Class.for(Inter).return(() => new Inter());
+
+	const t = Class.resolve(Inter);
+
+	expect(t.hello()).toBe("a");
+
+	Class.resolve(Inter);
+	Class.resolve(Inter);
+
+	expect(counter).toBe(1);
+});
+
+test("Resolving singleton through default constructor", () => {
+	Class.reset();
+
+	let counter = 0;
+
+	@singleton
+	class Inter {
+		constructor() {
+			counter++;
+		}
+		hello() { return "a" }
+	}
+
+	@override(Inter)
+	class Second extends Inter {
+		constructor() {
+			super();
+			counter++;
+		}
+		hello() { return super.hello() + "b" }
+	}
+
+	const t = Class.resolve(Inter);
+	let w = Class.create(Inter);
+
+	expect(w.hello()).toBe("ab");
+	expect(t.hello()).toBe("ab");
+
+	Class.resolve(Inter);
+	Class.resolve(Inter);
+
+	expect(counter).toBe(2);
 });
