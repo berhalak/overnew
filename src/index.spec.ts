@@ -496,3 +496,8 @@ test("Resolving singleton through default constructor", () => {
 
 	expect(counter).toBe(2);
 });
+
+test("Creating derive from virtual", () => {
+	Class.reset();
+
+});
