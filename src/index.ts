@@ -109,12 +109,18 @@ class Settings<V, D> {
 
 	}
 
+	/**
+	 * Use this class instead of the base class
+	 * @param derivedType Derived or implementation
+	 */
 	use<D>(derivedType: Type<D>) {
 		mapping.set(this.baseType, derivedType);
 		return this;
 	}
 
-
+	/**
+	 * Define this class as a singleton
+	 */
 	singleton() {
 		mappingsSingletons.add(this.baseType);
 		return Class;
@@ -162,6 +168,10 @@ function ensureSingleton<T>(type: Type<T>, resolve: () => T): T {
  * Container and an api for manipulating overrides
  */
 export class Class {
+	/**
+	 * 
+	 * @param type Singleton or created instance
+	 */
 	static resolve<T extends new (...args: any[]) => any>(type: T):
 		T extends new (...args: any[]) => infer R ? R : never {
 
