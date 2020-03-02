@@ -500,4 +500,40 @@ test("Resolving singleton through default constructor", () => {
 test("Creating derive from virtual", () => {
 	Class.reset();
 
+	@virtual
+	class Vir {
+		constructor() {
+		}
+	}
+
+	class Imp extends Vir {
+		constructor() {
+			super();
+		}
+		imp() { }
+	}
+
+	const v = new Imp();
+
+	expect(typeof v.imp).toBe("function");
+	expect(v.constructor).toBe(Imp);
+});
+
+test("Virtual shouldn't change anything", () => {
+	Class.reset();
+
+	@virtual
+	class Vir {
+		constructor() {
+		}
+		imp() {
+
+		}
+	}
+
+	const v = new Vir();
+
+	expect(typeof v.imp).toBe("function");
+	expect(v.constructor).toBe(Vir);
+	expect(v.constructor.name).toBe("Vir");
 });

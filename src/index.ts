@@ -46,6 +46,11 @@ function create<T>(this: any, virtualType: Type<T>, args: any[], context: Contex
 			return instance;
 		});
 	} else {
+		if (context && context.constructor != virtualType) {
+			const base = new virtualType(...args);
+			Object.assign(context, base);
+			return;
+		}
 		return ensureSingleton(virtualType, () => {
 			// create a original virtual type
 			// as there is not mapping, or we need to provide ducktypeing extends
@@ -72,16 +77,24 @@ export function singleton(baseType: any) {
  * or using verbose call to Class.for(Base).use(Derive)
  */
 export function virtual(baseType: any): any {
-	const constructorProxy: VType<any> = function (this: any, ...args: any[]) {
-		const instance = create(baseType as any, args, this);
-		return instance;
-	} as any;
+
+	let trickForName = {
+		[baseType.name]: function (this: any, ...args: any[]) {
+			const instance = create(baseType as any, args, this);
+			if (instance && instance.constructor == baseType) {
+				instance.constructor = constructorProxy;
+			}
+			return instance;
+		}
+	}
+
+	const constructorProxy: VType<any> = trickForName[baseType.name] as any;
+
 	constructorProxy.prototype = baseType.prototype;
 	// for packer - as can't set name for now
 	(constructorProxy as any).$type = baseType.name;
 	// store original type in static field
 	constructorProxy._proper = baseType;
-
 	// copy all the static props
 	Object.assign(constructorProxy, Object.assign({}, baseType));
 
