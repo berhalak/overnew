@@ -1,4 +1,4 @@
-import { override, virtual, Class, singleton } from './index';
+import { override, virtual, Class, singleton, inject } from './index';
 test('with decorators', () => {
 	Class.reset();
 
@@ -536,4 +536,48 @@ test("Virtual shouldn't change anything", () => {
 	expect(typeof v.imp).toBe("function");
 	expect(v.constructor).toBe(Vir);
 	expect(v.constructor.name).toBe("Vir");
+});
+
+test("inject", () => {
+	Class.reset();
+
+	class ServiceA {
+		methodA() {
+			return "t";
+		}
+	}
+
+	class ServiceB {
+		constructor(private a = inject(ServiceA)) {
+
+		}
+
+		methodB() {
+			return this.a.methodA() + "e";
+		}
+	}
+
+	class NewService implements ServiceA {
+		methodA() {
+			return "T";
+		}
+	}
+
+	class Model {
+		constructor(private b = inject(ServiceB)) {
+
+		}
+
+		test() {
+			return this.b.methodB() + "st";
+		}
+	}
+
+	inject.for(ServiceA).use(NewService);
+	inject.for(ServiceB).use(ServiceB);
+
+	const m = new Model();
+
+	expect(m.test()).toBe("Test");
+
 });

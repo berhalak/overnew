@@ -249,3 +249,14 @@ export class Class {
 		return (virtualType as any)._proper ?? virtualType;
 	}
 }
+
+
+function inject<T>(type: Type<T>): T {
+	return Class.resolve(type);
+}
+
+inject.for = function <T>(type: Type<T>) {
+	return Class.for(type);
+}
+
+export { inject }

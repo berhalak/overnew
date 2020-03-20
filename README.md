@@ -12,6 +12,49 @@ Sample:
 
 ``` ts
 
+// Simple usage using default parameter
+
+class ServiceA {
+    methodA(){
+        return "t";
+    }
+}
+
+class ServiceB {
+    constructor(private a = inject(ServiceA)){
+
+    }
+
+    methodB(){
+        return this.a.methodA() + "e";
+    }
+}
+
+class NewService implements ServiceA {
+    methodA(){
+        return "T";
+    }
+}
+
+class Model {
+    constructor(private b = inject(ServiceB)){
+
+    }
+
+    test(){
+        return this.b.methodB() + "st";
+    }
+}
+
+inject.for(ServiceA).use(NewService);
+inject.for(ServiceB).use(ServiceB);
+
+const m = new Model();
+
+expect(m.test()).toBe("Test");
+
+----
+
 @virtual
 class BaseClass {
     hello() {
