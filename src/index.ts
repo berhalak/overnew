@@ -104,7 +104,7 @@ export function virtual(baseType: any): any {
 type Type<T = any> = new (...args: any[]) => T;
 type VType<T> = Type<T> & { _proper?: Type<T>, name?: string }
 
-class Settings<V, D> {
+export class Settings<V, D> {
 	constructor(private baseType: Type<V>, private virtualType: Type<D>) {
 
 	}
@@ -255,7 +255,7 @@ function inject<T>(type: Type<T>): T {
 	return Class.resolve(type);
 }
 
-inject.for = function <T>(type: Type<T>) {
+inject.when = function <T>(type: Type<T>): Settings<T, T> {
 	return Class.for(type);
 }
 

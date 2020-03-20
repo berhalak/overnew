@@ -573,8 +573,8 @@ test("inject", () => {
 		}
 	}
 
-	inject.for(ServiceA).use(NewService);
-	inject.for(ServiceB).use(ServiceB);
+	inject.when(ServiceA).use(NewService);
+	inject.when(ServiceB).use(ServiceB);
 
 	const m = new Model();
 
