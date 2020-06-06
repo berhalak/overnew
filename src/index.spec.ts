@@ -1,4 +1,4 @@
-import { inject } from './index';
+import { inject, Container } from './index';
 
 test("Simple register", () => {
 	inject.reset();
@@ -119,4 +119,38 @@ test("Register factory method", () => {
 	m2.test(); //?
 	expect(m2.test()).toBe(4);
 
+});
+
+test("Remote objects", async () => {
+	inject.reset();
+
+	class Model {
+		counter = 0;
+
+		async test() {
+			return this.counter++;
+		}
+	}
+
+	inject.for(Model).createProxy();
+
+	const second = new Container();
+
+	let called = false;
+	second.for(Model).execute(() => {
+		called = true;
+		return new Model();
+	})
+
+	async function proxy(type: string, method: string, args: any[]) {
+		const result = await second.inject(type)[method](...args);
+		return result;
+	}
+
+	inject.proxyTo(proxy);
+
+	const m = inject(Model);
+
+	expect(await m.test()).toBe(0);
+	expect(called).toBeTruthy();
 });

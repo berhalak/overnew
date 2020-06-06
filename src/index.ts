@@ -36,16 +36,43 @@ class Settings<T> {
 		this.container.registerFactory(this.type, () => new this.type());
 		return new ScopeSettings<T>(this.container, this.type);
 	}
+
+	createProxy() {
+		this.container.registerAsProxy(this.type);
+	}
 }
 
+function createProxy<T>(type: Type<T>, handler: ProxyHandler) {
+	return new Proxy({}, {
+		get: (target, message) => {
+			return (...args: any[]) => {
+				return handler(type.name, message as string, args);
+			}
+		}
+	}) as any;
+}
+
+export type ProxyHandler = (type: string, method: string, args: any[]) => Promise<any>;
+
 export class Container {
+	registerAsProxy<T>(type: Type<T>) {
+		this.proxies.add(type);
+	}
+
+	proxy(p: ProxyHandler) {
+		this.proxyHandler = p;
+	}
 
 	private typeToFactory = new Map();
+	private nameToType = new Map();
 	private singletons = new Map();
 	private instances = new Map();
+	private proxies = new Set();
+	private proxyHandler: ProxyHandler = null;
 
 	registerFactory<T>(type: Type<T>, factory: () => T) {
 		this.typeToFactory.set(type, factory);
+		this.nameToType.set(type.name, type);
 	}
 
 	storeAsSingleton<T>(type: Type<T>) {
@@ -58,7 +85,22 @@ export class Container {
 		this.instances.clear();
 	}
 
-	resolve<T>(type: Type<T>): T {
+	inject<T>(what: Type<T> | string): T extends unknown ? any : T {
+
+
+
+		let type = typeof what == 'function' ? what : this.nameToType.get(what);
+
+		if (this.proxies.has(type)) {
+			if (this.instances.has(type)) {
+				return this.instances.get(type);
+			}
+
+			const proxy = createProxy(type, this.proxyHandler);
+			this.instances.set(type, proxy);
+			return proxy;
+		}
+
 		if (this.instances.has(type)) {
 			return this.instances.get(type);
 		}
@@ -71,6 +113,7 @@ export class Container {
 			}
 			return instance;
 		}
+
 		throw `Type ${type.name} is not registered`
 	}
 
@@ -107,8 +150,8 @@ export function container(): Container {
 }
 
 
-function inject<T>(type: Type<T>): T {
-	return container().resolve(type);
+function inject<T>(type: Type<T> | string): T extends unknown ? any : T {
+	return container().inject(type);
 }
 
 inject.for = function <T>(type: Type<T>): Settings<T> {
@@ -117,6 +160,10 @@ inject.for = function <T>(type: Type<T>): Settings<T> {
 
 inject.reset = function () {
 	container().reset();
+}
+
+inject.proxyTo = function (proxy: (type: string, method: string, args: any[]) => Promise<any>) {
+	container().proxy(proxy);
 }
 
 export { inject }
