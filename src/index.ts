@@ -1,7 +1,7 @@
 type Type<T = any> = new (...args: any[]) => T;
 
 class ScopeSettings<T> {
-	singleton() {
+	asSingleton() {
 		this.container.storeAsSingleton(this.type);
 		return this.container;
 	}
@@ -21,23 +21,22 @@ class Settings<T> {
 		return new ScopeSettings<T>(this.container, this.type);
 	}
 
-	use<V>(type: Type<V>): ScopeSettings<T>
-	use(type: T): ScopeSettings<T>
-	use(arg: any): ScopeSettings<T> {
-		if (typeof arg == 'function') {
-			this.container.registerFactory(this.type, () => new arg());
-		} else if (typeof arg == 'object') {
-			this.container.registerFactory(this.type, () => arg);
-		}
+	create<V>(ctor: Type<V>): ScopeSettings<T> {
+		this.container.registerFactory(this.type, () => new ctor() as any);
 		return new ScopeSettings<T>(this.container, this.type);
 	}
 
-	useSelf(): ScopeSettings<T> {
+	return(instance: T): ScopeSettings<T> {
+		this.container.registerFactory(this.type, () => instance);
+		return new ScopeSettings<T>(this.container, this.type);
+	}
+
+	createSelf(): ScopeSettings<T> {
 		this.container.registerFactory(this.type, () => new this.type());
 		return new ScopeSettings<T>(this.container, this.type);
 	}
 
-	asProxy() {
+	returnProxy() {
 		this.container.registerAsProxy(this.type);
 	}
 }
@@ -117,7 +116,7 @@ export class Container {
 		throw `Type ${type.name} is not registered`
 	}
 
-	return<T>(type: Type<T>) {
+	when<T>(type: Type<T>) {
 		return new Settings<T>(this, type);
 	}
 }
@@ -154,8 +153,8 @@ function inject<T>(type: Type<T> | string): T extends unknown ? any : T {
 	return container().inject(type);
 }
 
-inject.return = function <T>(type: Type<T>): Settings<T> {
-	return container().return(type);
+inject.when = function <T>(type: Type<T>): Settings<T> {
+	return container().when(type);
 }
 
 inject.reset = function () {
