@@ -21,9 +21,9 @@ class Settings<T> {
 		return new ScopeSettings<T>(this.container, this.type);
 	}
 
-	create<V>(type: Type<V>): ScopeSettings<T>
-	create(type: T): ScopeSettings<T>
-	create(arg: any): ScopeSettings<T> {
+	use<V>(type: Type<V>): ScopeSettings<T>
+	use(type: T): ScopeSettings<T>
+	use(arg: any): ScopeSettings<T> {
 		if (typeof arg == 'function') {
 			this.container.registerFactory(this.type, () => new arg());
 		} else if (typeof arg == 'object') {
@@ -32,12 +32,12 @@ class Settings<T> {
 		return new ScopeSettings<T>(this.container, this.type);
 	}
 
-	createSelf(): ScopeSettings<T> {
+	useSelf(): ScopeSettings<T> {
 		this.container.registerFactory(this.type, () => new this.type());
 		return new ScopeSettings<T>(this.container, this.type);
 	}
 
-	createProxy() {
+	asProxy() {
 		this.container.registerAsProxy(this.type);
 	}
 }
@@ -117,7 +117,7 @@ export class Container {
 		throw `Type ${type.name} is not registered`
 	}
 
-	for<T>(type: Type<T>) {
+	return<T>(type: Type<T>) {
 		return new Settings<T>(this, type);
 	}
 }
@@ -154,8 +154,8 @@ function inject<T>(type: Type<T> | string): T extends unknown ? any : T {
 	return container().inject(type);
 }
 
-inject.for = function <T>(type: Type<T>): Settings<T> {
-	return container().for(type);
+inject.return = function <T>(type: Type<T>): Settings<T> {
+	return container().return(type);
 }
 
 inject.reset = function () {

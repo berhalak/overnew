@@ -35,9 +35,9 @@ test("Simple register", () => {
 		}
 	}
 
-	inject.for(ServiceA).create(NewService).singleton();
-	inject.for(ServiceB).create(ServiceB);
-	inject.for(Model).createSelf();
+	inject.return(ServiceA).use(NewService).singleton();
+	inject.return(ServiceB).use(ServiceB);
+	inject.return(Model).useSelf();
 
 	const m = inject(Model);
 
@@ -56,7 +56,7 @@ test("Simple register", () => {
 		}
 	}
 
-	inject.for(Model).createSelf().singleton();
+	inject.return(Model).useSelf().singleton();
 
 	const m = inject(Model);
 
@@ -82,7 +82,7 @@ test("Register factory singleton", () => {
 		}
 	}
 
-	inject.for(Model).execute(() => new Model());
+	inject.return(Model).execute(() => new Model());
 
 	const m = inject(Model);
 
@@ -107,7 +107,7 @@ test("Register factory method", () => {
 		}
 	}
 
-	inject.for(Model).execute(() => new Model()).singleton();
+	inject.return(Model).execute(() => new Model()).singleton();
 
 	const m = inject(Model);
 
@@ -132,12 +132,12 @@ test("Remote objects", async () => {
 		}
 	}
 
-	inject.for(Model).createProxy();
+	inject.return(Model).asProxy();
 
 	const second = new Container();
 
 	let called = false;
-	second.for(Model).execute(() => {
+	second.return(Model).execute(() => {
 		called = true;
 		return new Model();
 	})
