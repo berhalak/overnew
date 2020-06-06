@@ -87,15 +87,15 @@ export class Container {
 
 	inject<T>(what: Type<T> | string): T extends unknown ? any : T {
 
-
-
 		let type = typeof what == 'function' ? what : this.nameToType.get(what);
 
 		if (this.proxies.has(type)) {
 			if (this.instances.has(type)) {
 				return this.instances.get(type);
 			}
-
+			if (!this.proxyHandler) {
+				throw "Proxy is not configured on this container";
+			}
 			const proxy = createProxy(type, this.proxyHandler);
 			this.instances.set(type, proxy);
 			return proxy;
