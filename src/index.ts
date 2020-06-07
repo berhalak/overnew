@@ -98,7 +98,11 @@ export class Container {
 		this.typeToOverride.clear();
 	}
 
-	inject<T>(what: Type<T> | string): T extends unknown ? any : T {
+	injectByName(name: string) {
+		return this.inject(this.nameToType.get(name));
+	}
+
+	inject<T>(what: Type<T>): T extends unknown ? any : T {
 
 		let type = typeof what == 'function' ? what : this.nameToType.get(what);
 
@@ -163,7 +167,7 @@ export function container(): Container {
 }
 
 
-function inject<T>(type: Type<T> | string): T extends unknown ? any : T {
+function inject<T>(type: Type<T>): T {
 	return container().inject(type);
 }
 

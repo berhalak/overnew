@@ -143,7 +143,7 @@ test("Remote objects", async () => {
 	})
 
 	async function proxy(type: string, method: string, args: any[]) {
-		const result = await second.inject(type)[method](...args);
+		const result = await second.injectByName(type)[method](...args);
 		return result;
 	}
 
