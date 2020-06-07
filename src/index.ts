@@ -22,7 +22,7 @@ class Settings<T> {
 	}
 
 	create<V>(ctor: Type<V>): ScopeSettings<T> {
-		this.container.registerFactory(this.type, () => new ctor() as any);
+		this.container.registerOverride(this.type, ctor as any);
 		return new ScopeSettings<T>(this.container, this.type);
 	}
 
@@ -54,6 +54,12 @@ function createProxy<T>(type: Type<T>, handler: ProxyHandler) {
 export type ProxyHandler = (type: string, method: string, args: any[]) => Promise<any>;
 
 export class Container {
+	resolve<T>(type: Type<T>): Type<T> {
+		if (this.typeToOverride.has(type)) {
+			return this.typeToOverride.get(type);
+		}
+		return null;
+	}
 	registerAsProxy<T>(type: Type<T>) {
 		this.proxies.add(type);
 	}
@@ -64,10 +70,17 @@ export class Container {
 
 	private typeToFactory = new Map();
 	private nameToType = new Map();
+	private typeToOverride = new Map();
 	private singletons = new Map();
 	private instances = new Map();
 	private proxies = new Set();
 	private proxyHandler: ProxyHandler = null;
+
+	registerOverride<T>(type: Type<T>, override: Type<T>) {
+		this.typeToFactory.set(type, () => new override());
+		this.typeToOverride.set(type, override);
+		this.nameToType.set(type.name, type);
+	}
 
 	registerFactory<T>(type: Type<T>, factory: () => T) {
 		this.typeToFactory.set(type, factory);
@@ -82,6 +95,7 @@ export class Container {
 		this.typeToFactory.clear();
 		this.singletons.clear();
 		this.instances.clear();
+		this.typeToOverride.clear();
 	}
 
 	inject<T>(what: Type<T> | string): T extends unknown ? any : T {
@@ -159,6 +173,10 @@ inject.when = function <T>(type: Type<T>): Settings<T> {
 
 inject.reset = function () {
 	container().reset();
+}
+
+inject.resolve = function <T>(type: Type<T>): Type<T> {
+	return container().resolve(type);
 }
 
 inject.proxyTo = function (proxy: (type: string, method: string, args: any[]) => Promise<any>) {

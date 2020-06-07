@@ -154,3 +154,30 @@ test("Remote objects", async () => {
 	expect(await m.test()).toBe(0);
 	expect(called).toBeTruthy();
 });
+
+test("Remote objects", async () => {
+	inject.reset();
+
+	class Service {
+		test() {
+			return 1;
+		}
+	}
+
+	class Service2 implements Service {
+		test() {
+			return 2;
+		}
+	}
+
+	inject.when(Service).create(Service2);
+
+	const s: Service = inject(Service);
+	expect(s.test()).toBe(2);
+
+	const override = inject.resolve(Service);
+
+	const newService = new override();
+
+	expect(newService.test()).toBe(2);
+});
