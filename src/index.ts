@@ -143,10 +143,6 @@ export class Container {
 var globalContainer: Container;
 
 export function container(): Container {
-	var window;
-	var global;
-	var globalThis;
-
 	var proper: { __container: Container };
 
 	if (typeof window == 'object') {
