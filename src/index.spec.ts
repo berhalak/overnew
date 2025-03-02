@@ -180,4 +180,55 @@ test("Remote objects", async () => {
 	const newService = new override();
 
 	expect(newService.test()).toBe(2);
+  inject.reset();
 });
+
+test("Scope works", () => {
+  const cc = new Container();
+
+  abstract class Service {
+    abstract test(): string;
+  }
+
+  class ServiceA extends Service {
+    test() {
+      return "A";
+    }
+  }
+
+  class ServiceB extends Service {
+    test() {
+      return "B";
+    }
+  }
+
+  cc.when(Service).create(ServiceA);
+
+  class User {
+    service = inject(Service);
+    constructor(public name: string) {
+
+    }
+  }
+
+  const u = cc.build(User, "a'");
+  expect(u.service.test()).toBe("A");
+
+  cc.when(Service).create(ServiceB);
+  const u2 = cc.build(User, "b");
+  expect(u2.service.test()).toBe("B");
+  
+});
+
+test("returns null if not registered", () => {
+  const cc = new Container();
+
+  class Service {
+    test() {
+      return 1;
+    }
+  }
+
+  const s = cc.inject(Service);
+  expect(s).toBeNull();
+})
